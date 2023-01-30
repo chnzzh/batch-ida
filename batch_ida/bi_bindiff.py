@@ -1,6 +1,7 @@
-from bi_ida import BI_IDA
 import os
 import subprocess
+
+from .bi_ida import BI_IDA
 
 
 def _match_be_files(A_dir: str, B_dir: str) -> list:
@@ -45,7 +46,7 @@ class BI_Bindiff(BI_IDA):
         if not os.path.isdir(idb_dir):
             raise Exception('Idb dir not exist.')
 
-        export_path = os.path.join(os.path.dirname(idb_dir), os.path.basename(idb_dir)+'_Export')
+        export_path = os.path.join(os.path.dirname(idb_dir), os.path.basename(idb_dir) + '_Export')
         if not os.path.isdir(export_path):
             os.mkdir(export_path)
 
@@ -80,7 +81,7 @@ class BI_Bindiff(BI_IDA):
             output_dir = os.path.join(os.path.dirname(A_dir), f'{os.path.basename(A_dir)}_vs_{os.path.basename(B_dir)}')
         if not os.path.isdir(output_dir):
             os.mkdir(output_dir)
-        
+
         # 1. 源文件转化为idb
         A_idb_dir = super().batch_idb_fromdir(A_dir)
         B_idb_dir = super().batch_idb_fromdir(B_dir)

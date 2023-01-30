@@ -5,11 +5,14 @@ description = ""
 authors = ["ZhengZH <41407837+chnzzh@users.noreply.github.com>"]
 readme = "README.md"
 packages = [{include = "batch_ida"}]
+repository = "https://github.com/chnzzh/barch-ida"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-
+python = "^3.7"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/chnzzh/barch-ida/issues"

@@ -1,9 +1,14 @@
-from bi_singleanalyzer import BI_SingleAnalyzer
 import os
+
+from .bi_singleanalyzer import BI_SingleAnalyzer
 
 
 class BI_Analyzer:
     def __init__(self, db_path):
+        """
+        [Not Recommend to Use]
+        BI_Analyzer used to read .BinDiff files in dir db_path.
+        """
         self.db_path = db_path
         self.analyzers = []
 

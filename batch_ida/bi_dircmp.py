@@ -1,5 +1,5 @@
-from filecmp import dircmp
 import os
+from filecmp import dircmp
 
 
 def file_filter(file):
@@ -8,6 +8,13 @@ def file_filter(file):
 
 class BI_Dircmp:
     def __init__(self, dir_a: str, dir_b: str, dst_a: str, dst_b: str):
+        """
+        BI_Dircmp compares files in dir_a & dir_b, and remove the different files to dst;
+        :param dir_a: Source directory A
+        :param dir_b: Source directory B
+        :param dst_a: An empty directory to save the diff files in dir_a
+        :param dst_b: An empty directory to save the diff files in dir_b
+        """
         self.dir_a = dir_a
         self.dir_b = dir_b
 
@@ -43,7 +50,7 @@ class BI_Dircmp:
             print('\033[1;31m', '  ' * layer, 'funny: ', ff, '\033[0m')
 
         for sub_dcmp in dcmp.subdirs.values():
-            self._print_diff_files(sub_dcmp, layer + 1)
+            self._print_diff_files(sub_dcmp, layer + 1, self.file_filter)
 
     def set_copyto_dir(self, dst_a: str, dst_b: str):
         if not os.path.isdir(dst_a):
@@ -57,6 +64,3 @@ class BI_Dircmp:
     def cmp(self):
         dcmp = dircmp(self.dir_a, self.dir_b)
         self._print_diff_files(dcmp, 0, self.file_filter)
-
-
-

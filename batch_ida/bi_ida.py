@@ -1,13 +1,14 @@
 import os
-import subprocess
 import shutil
+import subprocess
+
 
 class BI_IDA:
     def __init__(self):
         self._path_ida = ''
         self._path_ida_exe = ''
         self._filter = ['.asm', '.idb']
-        self.max_subprocess = 16
+        self.max_subprocess = 8         # max subprocess num
 
     def _pre_check(self):
         if not os.path.isfile(self._path_ida_exe):
@@ -34,16 +35,15 @@ class BI_IDA:
             raise Exception('File not exist.')
 
         # 如果已经解析过，直接跳过
-        if os.path.isfile(file_path+'.idb'):
+        if os.path.isfile(file_path + '.idb'):
             return None
 
         rt = subprocess.Popen([self._path_ida_exe, '-B', file_path])
         return rt
 
-
     def batch_idb_fromdir(self, bin_dir: str, output_dir: str = None):
         """
-        批量处理文件夹内的二进制文件, 处理结果复制到output_dir，开多进程加速处理
+        批量处理文件夹内的二进制文件, 处理结果复制到output_dir，多进程加速处理
         :param bin_dir:
         :param output_dir:
         :return:
@@ -84,17 +84,17 @@ class BI_IDA:
                 idb_path = os.path.join(bin_dir, file + '.idb')
                 pool.append((proc, idb_path))
 
-        while len(pool) > 0:
-            for i in pool:
-                if i[0] is None:  # 已存在
-                    shutil.copy2(i[1], output_dir)
-                    pool.remove(i)
-                    index = index + 1
-                    print(f'({index}/{max_len})[IDA]', i[1])
-                elif i[0].poll() is not None:
-                    shutil.copy2(i[1], output_dir)
-                    pool.remove(i)
-                    index = index + 1
-                    print(f'({index}/{max_len})[IDA]', i[1])
+            while len(pool) > 0:
+                for i in pool:
+                    if i[0] is None:  # 已存在
+                        shutil.copy2(i[1], output_dir)
+                        pool.remove(i)
+                        index = index + 1
+                        print(f'({index}/{max_len}) [IDA]', i[1])
+                    elif i[0].poll() is not None:
+                        shutil.copy2(i[1], output_dir)
+                        pool.remove(i)
+                        index = index + 1
+                        print(f'({index}/{max_len}) [IDA]', i[1])
 
         return output_dir
