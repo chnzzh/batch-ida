@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "batch-ida"
-version = "0.1.0"
+version = "0.1.2"
 description = ""
 authors = ["ZhengZH <41407837+chnzzh@users.noreply.github.com>"]
 readme = "README.md"
 packages = [{include = "batch_ida"}]
-repository = "https://github.com/chnzzh/barch-ida"
+repository = "https://github.com/chnzzh/batch-ida"
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -15,4 +15,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/chnzzh/barch-ida/issues"
+"Bug Tracker" = "https://github.com/chnzzh/batch-ida/issues"
