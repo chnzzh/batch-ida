@@ -7,12 +7,18 @@ class BI_SingleAnalyzer:
         self.name = os.path.basename(db_file_path)
         self.path = db_file_path
         self.db = sqlite3.connect(db_file_path)
-        self.similarity = self.select_similarity()
+        self.similarity = float(self.select_similarity())
+        self.confidence = float(self.select_confidence())
         self.diff_func = self.select_diff_func()
 
     def select_similarity(self):
         cu = self.db.cursor()
         cu.execute("select similarity from metadata;")
+        return cu.fetchall()[0][0]
+
+    def select_confidence(self):
+        cu = self.db.cursor()
+        cu.execute("select confidence from metadata;")
         return cu.fetchall()[0][0]
 
     def select_diff_func(self):
@@ -22,18 +28,19 @@ class BI_SingleAnalyzer:
         return ans
 
     def print_base_info(self):
-        print(self.similarity, end='\t')
-        print(len(self.diff_func), end='\t')
+        base_info = self.get_base_info_dict()
+        for i in base_info.values():
+            print(i, end='\t')
+        print()
 
+    def get_base_info_dict(self):
         cu = self.db.cursor()
         cu.execute("select functions from file;")
         ans = cu.fetchall()
-        func = ans[0][0] - ans[1][0]
+        func_dif = ans[0][0] - ans[1][0]
         cu.execute("select libfunctions from file;")
         ans = cu.fetchall()
         libfunc = ans[0][0] - ans[1][0]
-
-        print(func, end='\t')
-        print(libfunc, end='\t')
-        print(self.name, end='\t')
-        print()
+        rt = dict(similarity=self.similarity, confidence=self.confidence, total_func=len(self.diff_func),
+                  func_dif=func_dif, libfunc_dif=libfunc, name=self.name)
+        return rt

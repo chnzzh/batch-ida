@@ -17,8 +17,19 @@ class BI_Analyzer:
 
     def input_all_bindiff_db(self):
         for file in os.listdir(self.db_path):
-            self.analyzers.append(BI_SingleAnalyzer(os.path.join(self.db_path, file)))
+            if file.endswith('.BinDiff'):
+                self.analyzers.append(BI_SingleAnalyzer(os.path.join(self.db_path, file)))
 
     def print_base_info(self):
+        analyzes_list = self.analyzers
+        analyzes_list.sort(key=lambda x: x.similarity)
         for i in self.analyzers:
             i.print_base_info()
+
+    def get_info_list(self):
+        analyzes_list = self.analyzers
+        analyzes_list.sort(key=lambda x: x.similarity)
+        rt = []
+        for i in self.analyzers:
+            rt.append(i.get_base_info_dict())
+        return rt

@@ -69,5 +69,15 @@ Analyze Bindiff files (sqlite3 file format) in batch mode and print the results.
 from batch_ida import BI_Analyzer
 
 bia = BI_Analyzer(r'C:\Users\zzhihan\Desktop\test\4_4010_vs_4_4040')
-bia.print_base_info()
+# bia.print_base_info()
+
+# 输出存在不匹配函数的文件，和相似度小于0.95的文件
+info_list = bia.get_info_list()
+for i in info_list:
+    if i['total_func'] & i['func_dif'] & i['libfunc_dif']:
+        print("%.02f\t%.2f\t%d\t%d\t%d\t%s" % (i['similarity'], i['confidence'], i['total_func'], i['func_dif'], i[
+            "libfunc_dif"], i['name']))
+    elif i['similarity'] < 0.95 and i['similarity'] != 0.0:
+        print("%.02f\t%.2f\t%d\t%d\t%d\t%s" % (i['similarity'], i['confidence'], i['total_func'], i['func_dif'], i[
+            "libfunc_dif"], i['name']))
 ```
