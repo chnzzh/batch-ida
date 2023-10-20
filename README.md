@@ -1,16 +1,21 @@
 # Batch-IDA
 
-A python library for comparing folders and generate ida and bindiff files in batch mode. 
+A python library for generate ida pro files in batch mode & compare executable files use bindiff in batch mode.
 
-## Purpose
 
-1. Batch generation of idb files from binary files
-2. Use bindiff to batch compare idb files
-3. Roughly read the comparison results
+## Features
 
-## Notice
+1. Fast generate idb/i64 files from binary files in batch mode (Multiprocess supported)
+    ![generate_idb](images/generate_idb.gif)
+2. IDA Pro Plugin Script support
+3. Use bindiff to batch compare idb files
+4. Roughly read the comparison results
 
-+ IDA pro 7 and Bindiff 7 requires pre-installation. (Only tested on IDA pro 7.7 and bindiff 7)
+## Requirements
+
++ Windows environment (i don't know if it works on linux)
++ IDA pro 7 (Only tested on IDA pro 7.7)
++ BinDiff 7 (Optional, used to compare executable files in batch mode)
 
 ## Install
 
@@ -19,6 +24,25 @@ pip install --upgrade batch-ida
 ```
 
 ## Usage
+
+### BI_IDA
+
+Generate .idb/.i64 files (and run plugin) in batch mode.
+
+```python
+from batch_ida import BI_IDA
+
+
+bi = BI_IDA()
+bi.set_ida_path('C:\Tools\IDA Pro')
+
+# optional
+bi.set_script(r'.\example_script.py')   # run efiXplore IDA plugin
+bi.max_subprocess = 8
+
+bi.batch_idb_fromdir(r'.\qhtf.bin_PEs')
+```
+
 
 ### BI_Dircmp
 
@@ -43,7 +67,7 @@ bid.cmp()
 
 ### BI_Bindiff
 
-Generate .ida and .bindiff files in batch mode.
+Generate .idb and .bindiff files in batch mode.
 
 ```python
 # 使用Bindiff批量分析二进制文件

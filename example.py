@@ -1,3 +1,13 @@
+# 0. 从二进制文件夹中批量生成idb
+
+from batch_ida import BI_IDA
+
+bi = BI_IDA()
+bi.set_ida_path(r'C:\Tools\IDA Pro')
+bi.set_script(r'.\example_script.py')
+
+bi.batch_idb_fromdir(r'.\qhtf.bin_PEs')
+
 # 1. BI_Dircmp比较原文件夹，并复制哈希不同的文件到目标文件夹
 from batch_ida import BI_Dircmp
 
