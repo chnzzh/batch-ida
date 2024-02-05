@@ -21,10 +21,12 @@ def _match_be_files(A_dir: str, B_dir: str) -> list:
 
 
 class BI_Bindiff(BI_IDA):
-    def __init__(self):
+    def __init__(self, bindiff_path: str = ''):
         super().__init__()
         self._path_bindiff = ''
         self._path_bindiff_exe = ''
+
+        self.set_bindiff_path(bindiff_path)
 
     def _pre_check(self):
         if not os.path.isfile(self._path_bindiff_exe):
@@ -32,6 +34,10 @@ class BI_Bindiff(BI_IDA):
         return True
 
     def set_bindiff_path(self, bindiff_path: str):
+        """
+        To set the path of BinDiff.
+        for example: set_bindiff_path(r'C:\Program Files\BinDiff')
+        """
         exe_path = os.path.join(bindiff_path, r'bin\bindiff.exe')
         if os.path.isfile(exe_path):
             self._path_bindiff = bindiff_path
@@ -40,7 +46,9 @@ class BI_Bindiff(BI_IDA):
         return False
 
     def generate_BinExport(self, idb_dir: str):
-        """idb to BinExport，输入为包含idb文件的文件夹"""
+        """
+        To generate BinExport from idb files.
+        """
         if not self._pre_check():
             raise Exception('Bindiff Pre check failed.')
         if not os.path.isdir(idb_dir):
@@ -58,7 +66,9 @@ class BI_Bindiff(BI_IDA):
         return export_path
 
     def generate_bindiff(self, A_be_file: str, B_be_file: str, output_dir: str):
-        """输入比较的两个BinExport文件路径"""
+        """
+        To generate BinDiff Database from BinExport files.
+        """
         if not self._pre_check():
             raise Exception('Bindiff Pre check failed.')
         if not (os.path.isfile(A_be_file) | os.path.isfile(B_be_file)):
@@ -74,6 +84,10 @@ class BI_Bindiff(BI_IDA):
         return output_dir
 
     def batch_bindiff(self, A_dir: str, B_dir: str, output_dir: str = None):
+        """
+        To batch compare two directories of binary files.
+        for example: output = bib.batch_bindiff(dst_a, dst_b)
+        """
         if not (os.path.isdir(A_dir) | os.path.isdir(B_dir)):
             raise Exception('Bin dir not exist.')
 
@@ -94,6 +108,7 @@ class BI_Bindiff(BI_IDA):
 
         # 3. Export转化为bindiff
         pairs = _match_be_files(A_export_dir, B_export_dir)
+        bindiff_dir = output_dir
         for pair in pairs:
             bindiff_dir = self.generate_bindiff(pair[0], pair[1], output_dir)
         print('[Finish!]', bindiff_dir)
