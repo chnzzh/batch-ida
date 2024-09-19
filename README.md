@@ -19,14 +19,15 @@ A python library for generate ida pro files in batch mode & compare executable f
 1. Fast generate idb/i64 files from binary files in batch mode (Multiprocess supported)
     ![generate_idb](images/generate_idb.gif)
 2. IDA Pro Plugin Script support
-3. Use bindiff to batch compare idb files
+3. Use Bindiff for batch comparison of idb files
 4. Roughly read the comparison results
+   ![bia_result](images/bia_result.png)
 
 ## Requirements
 
-+ Windows environment (i don't know if it works on linux)
-+ IDA pro 7/8 (Only tested on IDA pro 7.7)
-+ BinDiff 7 (Optional, used to compare executable files in batch mode)
++ Windows environment or Linux wine environment
++ IDA pro 7.7/8.3
++ BinDiff 7/8 (Optional, used to compare executable files in batch mode)
 
 ## Install
 
@@ -46,6 +47,8 @@ from batch_ida import BI_IDA
 
 # create a BI_IDA object with ida pro path
 bi = BI_IDA('C:\Tools\IDA Pro')
+# if you use wine in linux, you can set use_wine=True
+# bi = BI_IDA('\home\Tools\IDA Pro', use_wine=True)
 
 # optional
 # bi.set_script(r'.\example_script.py')   # run IDA script
@@ -75,10 +78,11 @@ bid.cmp()
 
 ### BI_Bindiff
 
-Generate .idb and .bindiff files in batch mode.
+Generate .idb and .bindiff files in batch mode. (Windows only)
 
 ```python
 from batch_ida import BI_Bindiff
+
 
 bib = BI_Bindiff()
 
@@ -100,16 +104,17 @@ Analyze Bindiff files (sqlite3 file format) in batch mode and print the results.
 ```python
 from batch_ida import BI_Analyzer
 
-bia = BI_Analyzer(r'C:\Users\zzhihan\Desktop\test\4_4010_vs_4_4040')
-# bia.print_base_info()
 
-# print the comparison results
+bia = BI_Analyzer(r'path\to\output_dir')
+bia.print_base_info()
+
+# let's print the diff files with similarity < 0.95 and != 0.0
+print("%s\t%s\t%s\t%s\t%s\t%s" % ("SIM", "CONF", "TOTAL", "FUNC", "LIBFUNC", "NAME"))
 info_list = bia.get_info_list()
 for i in info_list:
     if i['total_func'] & i['func_dif'] & i['libfunc_dif']:
         print("%.02f\t%.2f\t%d\t%d\t%d\t%s" % (i['similarity'], i['confidence'], i['total_func'], i['func_dif'], i[
             "libfunc_dif"], i['name']))
-    # print the comparison results that are not 95% similar
     elif i['similarity'] < 0.95 and i['similarity'] != 0.0:
         print("%.02f\t%.2f\t%d\t%d\t%d\t%s" % (i['similarity'], i['confidence'], i['total_func'], i['func_dif'], i[
             "libfunc_dif"], i['name']))

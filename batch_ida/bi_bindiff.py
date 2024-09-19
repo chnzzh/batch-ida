@@ -1,8 +1,8 @@
 import os
 import subprocess
+import logging
 
 from .bi_ida import BI_IDA
-
 
 def _match_be_files(A_dir: str, B_dir: str) -> list:
     """把A和B文件夹下名称相同的文件配对 （取交集）"""
@@ -36,9 +36,11 @@ class BI_Bindiff(BI_IDA):
     def set_bindiff_path(self, bindiff_path: str):
         """
         To set the path of BinDiff.
-        for example: set_bindiff_path(r'C:\Program Files\BinDiff')
+        for example:
+            Windows: set_bindiff_path(r'C:\Program Files\BinDiff')
+            Linux  : set_bindiff_path('/usr/local/bin')
         """
-        exe_path = os.path.join(bindiff_path, r'bin\bindiff.exe')
+        exe_path = os.path.join(bindiff_path, 'bin', 'bindiff.exe') if os.name == 'nt' else os.path.join(bindiff_path, 'bindiff')
         if os.path.isfile(exe_path):
             self._path_bindiff = bindiff_path
             self._path_bindiff_exe = exe_path
@@ -99,18 +101,18 @@ class BI_Bindiff(BI_IDA):
         # 1. 源文件转化为idb
         A_idb_dir = super().batch_idb_fromdir(A_dir)
         B_idb_dir = super().batch_idb_fromdir(B_dir)
-        print('END Step 1')
+        logging.info('END Step 1')
 
         # 2. idb转化为Export
         A_export_dir = self.generate_BinExport(A_idb_dir)
         B_export_dir = self.generate_BinExport(B_idb_dir)
-        print('END Step 2')
+        logging.info('END Step 2')
 
         # 3. Export转化为bindiff
         pairs = _match_be_files(A_export_dir, B_export_dir)
         bindiff_dir = output_dir
         for pair in pairs:
             bindiff_dir = self.generate_bindiff(pair[0], pair[1], output_dir)
-        print('[Finish!]', bindiff_dir)
+        logging.info(f'[Bindiff] Finish! Output in {bindiff_dir}')
 
         return output_dir

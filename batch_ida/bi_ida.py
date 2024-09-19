@@ -2,7 +2,11 @@ import os
 import shutil
 import subprocess
 import struct
+import logging
 
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)-7s | %(message)s')
 
 # Automatically detects the architecture for PE files
 def detect_arch_pe_files(filename):
@@ -60,7 +64,7 @@ def detect_arch(filename):
 
 
 class BI_IDA:
-    def __init__(self, ida_path: str = ''):
+    def __init__(self, ida_path: str = '', use_wine: bool = False):
         self._path_ida = ''
         self._path_ida_exe = ''
         self._path_ida64_exe = ''
@@ -68,9 +72,13 @@ class BI_IDA:
         self._filter = ['.asm', '.idb', '.i64', '.til', '.nam', '.id0', '.id1', '.id2', '.json', '.log', '.dmp']
         self.max_subprocess = 4  # max subprocess num
         self.cmd = ['-B']
+        self.use_wine = use_wine
 
         if ida_path:
             self.set_ida_path(ida_path)
+
+        if use_wine and not shutil.which('wine'):
+            raise Exception('Wine not found.')
 
     def _pre_check(self):
         if not os.path.isfile(self._path_ida_exe):
@@ -78,12 +86,14 @@ class BI_IDA:
         return True
 
     def set_script(self, script_path: str):
+        script_path = os.path.expanduser(script_path)
         if os.path.isfile(script_path):
             self.cmd = ['-c', '-A', f'-S"{os.path.abspath(script_path)}"']
         else:
             raise Exception('Script not exist.')
 
     def set_ida_path(self, ida_path: str):
+        ida_path = os.path.expanduser(ida_path)
         exe_path = os.path.join(ida_path, 'ida.exe')
         exe64_path = os.path.join(ida_path, 'ida64.exe')
         if os.path.isfile(exe_path) and os.path.isfile(exe64_path):
@@ -99,26 +109,26 @@ class BI_IDA:
         :param file_path: 文件路径
         :return:
         """
+        file_path = os.path.expanduser(file_path)
         if not self._pre_check():
             raise Exception('IDA Pre check failed: ' + self._path_ida_exe + ' not exist.')
         if not os.path.isfile(file_path):
             raise Exception('File not exist.')
 
-        # 如果已经解析过，直接跳过
-        #if os.path.isfile(file_path + '.idb'):
-            #return None
-
         arch = detect_arch(file_path)
         if arch == 32:
-            # 参数为self._path_ida_exe + self.cmd + [file_path]
-            rt = subprocess.Popen([self._path_ida_exe] + self.cmd + [file_path])
-            print([self._path_ida64_exe] + self.cmd + [file_path])
+            cmd = [self._path_ida_exe] + self.cmd + [file_path]
         elif arch == 64:
-            rt = subprocess.Popen([self._path_ida64_exe] + self.cmd + [file_path])
-            print([self._path_ida64_exe] + self.cmd + [file_path])
+            cmd = [self._path_ida64_exe] + self.cmd + [file_path]
         else:
-            print(f'Unknown arch, Skip: {file_path}')
-            rt = None
+            #logging.warning(f'Unknown arch, Skip: {file_path}')
+            return None
+
+        if self.use_wine:
+            cmd = ['wine'] + cmd
+
+        rt = subprocess.Popen(cmd)
+        # logging.info(cmd)
         return rt
 
     def batch_idb_fromdir(self, bin_dir: str, output_dir: str = None, enable_copy: bool = True):
@@ -129,6 +139,9 @@ class BI_IDA:
         :param enable_copy: If True, the idb files will be copied to the output_dir
         :return: The directory of idb files. If output_dir is None and enable_copy is True, the directory will be created.
         """
+        bin_dir = os.path.expanduser(bin_dir)
+        if output_dir:
+            output_dir = os.path.expanduser(output_dir)
         if not os.path.isdir(bin_dir):
             raise Exception('Bin directory not exist.')
         if not output_dir:
@@ -144,14 +157,13 @@ class BI_IDA:
             items_to_remove = []
             for i in pool:
                 if i[0].poll() is not None:
-                    # 判断i[1]是否在文件夹内
                     if not os.path.isfile(i[1]):
                         err_list.append(i[1])
                     elif enable_copy:
                         shutil.copy2(i[1], output_dir)
                     items_to_remove.append(i)
                     _index = _index + 1
-                    print(f'({index+1}/{max_len}) [IDA]', i[1])
+                    logging.info(f'[IDA] ({index+1}/{max_len}) Success: {i[1]}')
             for i in items_to_remove:
                 pool.remove(i)
             return _index
@@ -163,8 +175,8 @@ class BI_IDA:
                 file_path = os.path.join(maindir, file)
 
                 if os.path.splitext(file_path)[1] in self._filter:
-                    print(f'({index}/{max_len}) [IDA] PASS:', file_path)
                     index = index + 1
+                    logging.info(f'[IDA] ({index}/{max_len}) Ignore: {file_path}')
                     continue
 
                 while len(pool) >= self.max_subprocess:
@@ -176,7 +188,8 @@ class BI_IDA:
                 elif arch == 64:
                     idb_path = os.path.join(bin_dir, file + '.i64')
                 else:
-                    print(f'Unknown arch: {file_path}')
+                    index = index + 1
+                    logging.warning(f'[IDA] ({index}/{max_len}) Unknown: {file_path}')
                     continue
 
                 proc = self.generate_idb(file_path)
@@ -185,10 +198,9 @@ class BI_IDA:
             while len(pool) > 0:
                 index = _loop_pool(index)
 
-        # 输出红色提示
         if len(err_list) > 0:
-            print('\033[1;31m', 'Generate idb/i64 Failed: ' '\033[0m')
+            logging.error(f'[IDA] Generate {len(err_list)} idb/i64 Failed:')
             for i in err_list:
-                print('\033[1;31m', i, '\033[0m')
+                logging.error(i)
 
         return output_dir

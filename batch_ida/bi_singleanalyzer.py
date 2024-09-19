@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import logging
 
 
 class BI_SingleAnalyzer:
@@ -29,9 +30,7 @@ class BI_SingleAnalyzer:
 
     def print_base_info(self):
         base_info = self.get_base_info_dict()
-        for i in base_info.values():
-            print(i, end='\t')
-        print()
+        logging.info("[Analyzer] " + " ".join(str(i) for i in base_info.values()))
 
     def get_base_info_dict(self):
         cu = self.db.cursor()
