@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import struct
 import logging
+import sys
 
 
 # Configure logging
@@ -94,12 +95,25 @@ class BI_IDA:
 
     def set_ida_path(self, ida_path: str):
         ida_path = os.path.expanduser(ida_path)
-        exe_path = os.path.join(ida_path, 'ida.exe')
-        exe64_path = os.path.join(ida_path, 'ida64.exe')
-        if os.path.isfile(exe_path) and os.path.isfile(exe64_path):
+        if sys.platform.startswith('win'):
+            exe_name = 'ida.exe'
+            exe64_name = 'ida64.exe'
+        else:
+            exe_name = 'ida'
+            exe64_name = 'ida64'
+
+        exe_path = os.path.join(ida_path, exe_name)
+        exe64_path = os.path.join(ida_path, exe64_name)
+
+        # check if the path is valid
+        if os.path.isfile(exe_path):
             self._path_ida = ida_path
             self._path_ida_exe = exe_path
-            self._path_ida64_exe = exe64_path
+            # check if the 64-bit version exists (noexist > 9.0)
+            if os.path.isfile(exe64_path):
+                self._path_ida64_exe = exe64_path
+            else:
+                self._path_ida64_exe = exe_path
             return True
         return False
 
