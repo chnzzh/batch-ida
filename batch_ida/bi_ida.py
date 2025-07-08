@@ -75,6 +75,8 @@ class BI_IDA:
         self.cmd = ['-B']
         self.use_wine = use_wine
 
+        self._ida_ge90 = False
+
         if ida_path:
             self.set_ida_path(ida_path)
 
@@ -98,6 +100,11 @@ class BI_IDA:
         if sys.platform.startswith('win'):
             exe_name = 'ida.exe'
             exe64_name = 'ida64.exe'
+        elif sys.platform.startswith('darwin'):
+            exe_name = 'ida'
+            exe64_name = 'ida64'
+            if ida_path.endswith('.app'):
+                ida_path = os.path.join(ida_path, 'Contents', 'MacOS')
         else:
             exe_name = 'ida'
             exe64_name = 'ida64'
@@ -114,6 +121,7 @@ class BI_IDA:
                 self._path_ida64_exe = exe64_path
             else:
                 self._path_ida64_exe = exe_path
+                self._ida_ge90 = True
             return True
         return False
 
@@ -171,7 +179,7 @@ class BI_IDA:
             items_to_remove = []
             for i in pool:
                 if i[0].poll() is not None:
-                    if not os.path.isfile(i[1]):
+                    if not (os.path.isfile(i[1]+'.idb') or os.path.isfile(i[1]+'.i64')) :
                         err_list.append(i[1])
                     elif enable_copy:
                         shutil.copy2(i[1], output_dir)
@@ -197,10 +205,8 @@ class BI_IDA:
                     index = _loop_pool(index)
 
                 arch = detect_arch(file_path)
-                if arch == 32:
-                    idb_path = os.path.join(bin_dir, file + '.idb')
-                elif arch == 64:
-                    idb_path = os.path.join(bin_dir, file + '.i64')
+                if arch in [32, 64]:
+                    idb_path = os.path.join(bin_dir, file)
                 else:
                     index = index + 1
                     logging.warning(f'[IDA] ({index}/{max_len}) Unknown: {file_path}')
