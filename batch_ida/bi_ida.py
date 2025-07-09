@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import struct
 import logging
+import sys
 
 
 # Configure logging
@@ -74,6 +75,8 @@ class BI_IDA:
         self.cmd = ['-B']
         self.use_wine = use_wine
 
+        self._ida_ge90 = False
+
         if ida_path:
             self.set_ida_path(ida_path)
 
@@ -94,12 +97,31 @@ class BI_IDA:
 
     def set_ida_path(self, ida_path: str):
         ida_path = os.path.expanduser(ida_path)
-        exe_path = os.path.join(ida_path, 'ida.exe')
-        exe64_path = os.path.join(ida_path, 'ida64.exe')
-        if os.path.isfile(exe_path) and os.path.isfile(exe64_path):
+        if sys.platform.startswith('win'):
+            exe_name = 'ida.exe'
+            exe64_name = 'ida64.exe'
+        elif sys.platform.startswith('darwin'):
+            exe_name = 'ida'
+            exe64_name = 'ida64'
+            if ida_path.endswith('.app'):
+                ida_path = os.path.join(ida_path, 'Contents', 'MacOS')
+        else:
+            exe_name = 'ida'
+            exe64_name = 'ida64'
+
+        exe_path = os.path.join(ida_path, exe_name)
+        exe64_path = os.path.join(ida_path, exe64_name)
+
+        # check if the path is valid
+        if os.path.isfile(exe_path):
             self._path_ida = ida_path
             self._path_ida_exe = exe_path
-            self._path_ida64_exe = exe64_path
+            # check if the 64-bit version exists (noexist > 9.0)
+            if os.path.isfile(exe64_path):
+                self._path_ida64_exe = exe64_path
+            else:
+                self._path_ida64_exe = exe_path
+                self._ida_ge90 = True
             return True
         return False
 
@@ -157,7 +179,7 @@ class BI_IDA:
             items_to_remove = []
             for i in pool:
                 if i[0].poll() is not None:
-                    if not os.path.isfile(i[1]):
+                    if not (os.path.isfile(i[1]+'.idb') or os.path.isfile(i[1]+'.i64')) :
                         err_list.append(i[1])
                     elif enable_copy:
                         shutil.copy2(i[1], output_dir)
@@ -183,10 +205,8 @@ class BI_IDA:
                     index = _loop_pool(index)
 
                 arch = detect_arch(file_path)
-                if arch == 32:
-                    idb_path = os.path.join(bin_dir, file + '.idb')
-                elif arch == 64:
-                    idb_path = os.path.join(bin_dir, file + '.i64')
+                if arch in [32, 64]:
+                    idb_path = os.path.join(bin_dir, file)
                 else:
                     index = index + 1
                     logging.warning(f'[IDA] ({index}/{max_len}) Unknown: {file_path}')

@@ -8,7 +8,9 @@
 ![PyPI - Wheel](https://img.shields.io/pypi/wheel/batch-ida)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/batch-ida)
 
-
+![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=F0F0F0)
+![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)
 
 
 A python library for generate ida pro files in batch mode & compare executable files use bindiff in batch mode.
@@ -25,8 +27,8 @@ A python library for generate ida pro files in batch mode & compare executable f
 
 ## Requirements
 
-+ Windows environment or Linux wine environment
-+ IDA pro 7.7/8.3
++ Windows / macOS / Linux / Linux (wine)
++ IDA pro 7.7/8.3/9.1
 + BinDiff 7/8 (Optional, used to compare executable files in batch mode)
 
 ## Install
